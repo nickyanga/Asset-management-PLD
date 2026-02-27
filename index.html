@@ -1,19 +1,1064 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Asset Management PLD</title>
-  </head>
-  <body>
-    <div class="header">
-      <h1>Asset Management PLD</h1>
-      <p>
-        To Streamline the process of managing and tracking assets effectively.
-      </p>
-    </div>
-    <div class="nav-tab">
-        
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asset Management PLD</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --c-primary:   #2563eb;
+      --c-primary-h: #1d4ed8;
+      --c-success:   #16a34a;
+      --c-danger:    #dc2626;
+      --c-warning:   #d97706;
+      --c-bg:        #f8fafc;
+      --c-surface:   #ffffff;
+      --c-border:    #e2e8f0;
+      --c-text:      #1e293b;
+      --c-muted:     #64748b;
+      --c-badge-avail: #dcfce7;
+      --c-badge-loan:  #fef9c3;
+      --c-badge-ret:   #f1f5f9;
+      --radius:      6px;
+      --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--c-bg);
+      color: var(--c-text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
 
-  </body>
+    /* ── Layout ── */
+    .app-header {
+      background: var(--c-primary);
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .app-header h1 { font-size: 18px; font-weight: 600; }
+    .app-header span { font-size: 13px; opacity: .75; }
+    .main { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    /* ── Verification Banner ── */
+    .verify-banner {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .verify-banner h3 { font-size: 13px; font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .verify-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .verify-row .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    .verify-row label { font-size: 12px; font-weight: 500; color: var(--c-muted); }
+    .verified-badge {
+      display: flex; align-items: center; gap: 10px;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: var(--radius); padding: 10px 14px;
+    }
+    .verified-badge .check { color: var(--c-success); font-weight: 700; font-size: 16px; }
+    .verified-badge .info { flex: 1; }
+    .verified-badge .info strong { display: block; }
+    .verified-badge .info span { color: var(--c-muted); font-size: 13px; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--c-border); }
+    .tab-btn {
+      padding: 9px 20px;
+      background: none; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 500; color: var(--c-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn:hover { color: var(--c-primary); }
+    .tab-btn.active { color: var(--c-primary); border-bottom-color: var(--c-primary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Cards / Panels ── */
+    .card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    /* ── Forms ── */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 500; color: var(--c-muted); }
+    input[type="text"], input[type="email"], select, textarea {
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      font-size: 14px;
+      color: var(--c-text);
+      background: var(--c-surface);
+      width: 100%;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--c-primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    input[readonly], input[disabled] {
+      background: var(--c-bg);
+      color: var(--c-muted);
+      cursor: not-allowed;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius); border: none;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary  { background: var(--c-primary); color: #fff; }
+    .btn-primary:hover:not(:disabled)  { background: var(--c-primary-h); }
+    .btn-success  { background: var(--c-success); color: #fff; }
+    .btn-success:hover:not(:disabled)  { background: #15803d; }
+    .btn-danger   { background: var(--c-danger); color: #fff; }
+    .btn-danger:hover:not(:disabled)   { background: #b91c1c; }
+    .btn-secondary { background: var(--c-border); color: var(--c-text); }
+    .btn-secondary:hover:not(:disabled){ background: #cbd5e1; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-link { background: none; color: var(--c-primary); padding: 0; text-decoration: underline; font-size: 13px; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      text-align: left; padding: 9px 10px;
+      background: var(--c-bg); font-weight: 600;
+      border-bottom: 2px solid var(--c-border);
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: #f8fafc; }
+    td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+    .td-actions { display: flex; gap: 6px; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 9999px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .badge-avail   { background: var(--c-badge-avail); color: #15803d; }
+    .badge-loan    { background: var(--c-badge-loan);  color: #92400e; }
+    .badge-retired { background: var(--c-badge-ret);   color: var(--c-muted); }
+    .badge-return  { background: #ede9fe; color: #5b21b6; }
+
+    /* ── Toast ── */
+    #toast-container {
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; flex-direction: column; gap: 8px; z-index: 9999;
+    }
+    .toast {
+      min-width: 260px; max-width: 360px;
+      padding: 12px 16px; border-radius: var(--radius);
+      color: #fff; font-size: 13px; font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      animation: slideIn .25s ease;
+    }
+    .toast-success { background: var(--c-success); }
+    .toast-error   { background: var(--c-danger); }
+    .toast-info    { background: var(--c-primary); }
+    @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--c-surface); border-radius: 8px;
+      padding: 24px; width: 100%; max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── Misc ── */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--c-muted); }
+    .empty-state p { font-size: 15px; margin-bottom: 6px; }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .section-header h2 { font-size: 15px; font-weight: 600; margin: 0; }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .import-summary {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: var(--radius); padding: 12px 14px; font-size: 13px;
+    }
+    .import-summary.has-errors { background: #fff7ed; border-color: #fed7aa; }
+    .import-errors { margin-top: 8px; color: var(--c-danger); font-size: 12px; list-style: disc; padding-left: 16px; }
+    .info-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .info-item { display: flex; flex-direction: column; }
+    .info-item label { font-size: 11px; font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .info-item span { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- ── App Header ── -->
+<header class="app-header">
+  <h1>Asset Management PLD</h1>
+  <span>Personal Learning Device Loan Tracker</span>
+</header>
+
+<div class="main">
+
+  <!-- ── Verification Banner ── -->
+  <div class="verify-banner" id="verifyBanner">
+    <h3>Identity Verification</h3>
+    <div id="verifyForm">
+      <div class="verify-row">
+        <div class="field">
+          <label for="vName">Full Name</label>
+          <input type="text" id="vName" placeholder="e.g. Jane Smith" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="vEmail">Email Address</label>
+          <input type="email" id="vEmail" placeholder="e.g. jane@school.edu" autocomplete="email" />
+        </div>
+        <button class="btn btn-primary" onclick="confirmIdentity()">Confirm Identity</button>
+      </div>
+    </div>
+    <div id="verifyConfirmed" style="display:none">
+      <div class="verified-badge">
+        <span class="check">&#10003;</span>
+        <div class="info">
+          <strong id="vcName"></strong>
+          <span id="vcEmail"></span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="changeIdentity()">Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('loan', this)">Loan</button>
+    <button class="tab-btn" onclick="switchTab('return', this)">Return</button>
+    <button class="tab-btn" onclick="switchTab('records', this)">Records</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Tab 1 — Loan                              -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-loan" class="tab-pane active">
+    <div class="card">
+      <h2>Loan a Device</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="loanName">Borrower Name</label>
+          <input type="text" id="loanName" readonly placeholder="Confirm identity above" />
+        </div>
+        <div class="form-group">
+          <label for="loanEmail">Borrower Email</label>
+          <input type="email" id="loanEmail" readonly placeholder="Confirm identity above" />
+        </div>
+        <div class="form-group full">
+          <label for="assetSearch">Select Asset <small style="color:var(--c-muted)">(type to search)</small></label>
+          <input
+            type="text" id="assetSearch"
+            list="assetOptions"
+            placeholder="Type asset tag or device name..."
+            oninput="onAssetSearchInput(this.value)"
+            autocomplete="off"
+          />
+          <datalist id="assetOptions"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Asset Tag</label>
+          <input type="text" id="lAssetTag" readonly />
+        </div>
+        <div class="form-group">
+          <label>Serial Number</label>
+          <input type="text" id="lSerial" readonly />
+        </div>
+        <div class="form-group">
+          <label>Device Name</label>
+          <input type="text" id="lDeviceName" readonly />
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <input type="text" id="lModel" readonly />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" id="lCategory" readonly />
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <input type="text" id="lCondition" readonly />
+        </div>
+      </div>
+      <div style="margin-top:18px; display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-primary" id="submitLoanBtn" onclick="submitLoan()" disabled>
+          Submit Loan
+        </button>
+        <span id="loanStatus" style="font-size:13px; color:var(--c-muted);"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Tab 2 — Return                            -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-return" class="tab-pane">
+    <div class="card">
+      <h2>Search for a Loan</h2>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label for="returnQuery">Search by Borrower Name or Email</label>
+          <input type="text" id="returnQuery" placeholder="e.g. Jane Smith or jane@school.edu"
+            oninput="onReturnSearchInput()" />
+        </div>
+        <div class="form-group" style="flex:1; min-width:160px;">
+          <label for="returnAssetTag">Search by Asset Tag</label>
+          <input type="text" id="returnAssetTag" placeholder="e.g. PLT-001"
+            oninput="onReturnTagInput()" />
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:8px;">
+          <button class="btn btn-primary" onclick="searchReturn()">Search</button>
+          <button class="btn btn-secondary" onclick="clearReturnSearch()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="returnResults" style="display:none;">
+      <div class="section-header">
+        <h2>Open Loans</h2>
+        <span id="returnResultCount" style="font-size:13px; color:var(--c-muted);"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="returnTable">
+          <thead>
+            <tr>
+              <th>Asset Tag</th>
+              <th>Device</th>
+              <th>Borrower</th>
+              <th>Email</th>
+              <th>Loaned Since</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="returnTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Tab 3 — Records                           -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-records" class="tab-pane">
+
+    <!-- Transaction History -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Transaction History</h2>
+        <input type="text" id="txnFilter" placeholder="Filter by any field..." style="width:220px;"
+          oninput="filterTransactions(this.value)" />
+      </div>
+      <div id="txnLoading" class="empty-state"><p>Loading...</p></div>
+      <div class="table-wrap" id="txnTableWrap" style="display:none;">
+        <table id="txnTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Asset Tag</th>
+              <th>Device</th>
+              <th>Borrower</th>
+              <th>Loan Date</th>
+              <th>Return Date</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody id="txnTableBody"></tbody>
+        </table>
+      </div>
+      <div id="txnEmpty" class="empty-state" style="display:none;"><p>No transactions found.</p></div>
+    </div>
+
+    <!-- Asset Management -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Asset Management</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+            Import CSV
+            <input type="file" id="csvInput" accept=".csv,.txt" style="display:none;" onchange="handleCSVImport(event)" />
+          </label>
+          <button class="btn btn-primary btn-sm" onclick="openAddAssetModal()">+ Add Asset</button>
+        </div>
+      </div>
+
+      <div id="importSummary" style="display:none; margin-bottom:14px;"></div>
+
+      <div id="assetLoading" class="empty-state"><p>Loading...</p></div>
+      <div class="table-wrap" id="assetTableWrap" style="display:none;">
+        <table id="assetTable">
+          <thead>
+            <tr>
+              <th>Asset Tag</th>
+              <th>Serial</th>
+              <th>Device Name</th>
+              <th>Model</th>
+              <th>Category</th>
+              <th>Condition</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="assetTableBody"></tbody>
+        </table>
+      </div>
+      <div id="assetEmpty" class="empty-state" style="display:none;"><p>No assets found. Add one above.</p></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ── Return Confirm Modal ── -->
+<div class="modal-overlay" id="returnModal">
+  <div class="modal">
+    <h3>Confirm Return</h3>
+    <div id="returnModalInfo" class="info-row" style="margin-bottom:16px; flex-direction:column; gap:8px;"></div>
+    <div class="form-group">
+      <label for="returnAdminNotes">Admin Notes (optional)</label>
+      <textarea id="returnAdminNotes" rows="2" placeholder="e.g. Returned with charger"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeReturnModal()">Cancel</button>
+      <button class="btn btn-success" id="confirmReturnBtn" onclick="confirmReturn()">Confirm Return</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Asset Modal ── -->
+<div class="modal-overlay" id="addAssetModal">
+  <div class="modal">
+    <h3>Add New Asset</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="aaTag">Asset Tag *</label>
+        <input type="text" id="aaTag" placeholder="e.g. PLT-001" />
+      </div>
+      <div class="form-group">
+        <label for="aaSerial">Serial Number</label>
+        <input type="text" id="aaSerial" placeholder="e.g. SN123456" />
+      </div>
+      <div class="form-group">
+        <label for="aaDevice">Device Name *</label>
+        <input type="text" id="aaDevice" placeholder="e.g. iPad 9th Gen" />
+      </div>
+      <div class="form-group">
+        <label for="aaModel">Model</label>
+        <input type="text" id="aaModel" placeholder="e.g. MK2E3LL/A" />
+      </div>
+      <div class="form-group">
+        <label for="aaCategory">Category</label>
+        <input type="text" id="aaCategory" placeholder="e.g. Tablet" />
+      </div>
+      <div class="form-group">
+        <label for="aaCondition">Condition</label>
+        <select id="aaCondition">
+          <option value="New">New</option>
+          <option value="Good" selected>Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label for="aaNotes">Notes</label>
+        <input type="text" id="aaNotes" placeholder="Optional notes" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAddAssetModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveAssetBtn" onclick="saveNewAsset()">Add Asset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div id="toast-container"></div>
+
+<script>
+// ============================================================
+// APP STATE
+// ============================================================
+var APP_STATE = {
+  user: { name: '', email: '', confirmed: false },
+  availableAssets: [],
+  allAssets:       [],
+  allTransactions: [],
+  pendingReturn:   null   // loan object awaiting return confirmation
+};
+
+// ============================================================
+// SERVER COMMUNICATION
+// ============================================================
+function runServer(fnName, params, onSuccess, onError) {
+  var runner = google.script.run
+    .withSuccessHandler(onSuccess)
+    .withFailureHandler(onError || showErrorToast);
+  runner[fnName](params);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type) {
+  var c = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'info');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity .4s'; }, 3000);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3500);
+}
+function showErrorToast(err) {
+  showToast(typeof err === 'string' ? err : (err.message || 'An error occurred.'), 'error');
+}
+function showSuccessToast(msg) { showToast(msg, 'success'); }
+
+// ============================================================
+// IDENTITY VERIFICATION BANNER
+// ============================================================
+function confirmIdentity() {
+  var name  = document.getElementById('vName').value.trim();
+  var email = document.getElementById('vEmail').value.trim();
+  if (!name)  { showToast('Please enter your full name.', 'error'); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Please enter a valid email address.', 'error'); return;
+  }
+  APP_STATE.user = { name: name, email: email, confirmed: true };
+  document.getElementById('vcName').textContent  = name;
+  document.getElementById('vcEmail').textContent = email;
+  document.getElementById('verifyForm').style.display      = 'none';
+  document.getElementById('verifyConfirmed').style.display = 'block';
+  // Auto-fill loan form
+  document.getElementById('loanName').value  = name;
+  document.getElementById('loanEmail').value = email;
+  updateLoanBtn();
+}
+
+function changeIdentity() {
+  APP_STATE.user = { name: '', email: '', confirmed: false };
+  document.getElementById('vName').value  = '';
+  document.getElementById('vEmail').value = '';
+  document.getElementById('verifyForm').style.display      = 'block';
+  document.getElementById('verifyConfirmed').style.display = 'none';
+  document.getElementById('loanName').value  = '';
+  document.getElementById('loanEmail').value = '';
+  updateLoanBtn();
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+
+  if (tabId === 'loan')    loadAvailableAssets();
+  if (tabId === 'records') loadRecordsData();
+}
+
+// ============================================================
+// TAB 1 — LOAN
+// ============================================================
+function loadAvailableAssets() {
+  runServer('getAvailableAssets', null, function(assets) {
+    APP_STATE.availableAssets = assets || [];
+    populateAssetDatalist();
+  }, showErrorToast);
+}
+
+function populateAssetDatalist() {
+  var dl = document.getElementById('assetOptions');
+  dl.innerHTML = '';
+  APP_STATE.availableAssets.forEach(function(a) {
+    var opt = document.createElement('option');
+    opt.value = a.assetTag + ' – ' + a.deviceName + ' (' + a.model + ')';
+    opt.dataset.tag = a.assetTag;
+    dl.appendChild(opt);
+  });
+}
+
+function onAssetSearchInput(val) {
+  // Find matching asset by asset tag prefix in value
+  var match = null;
+  APP_STATE.availableAssets.forEach(function(a) {
+    var optValue = a.assetTag + ' \u2013 ' + a.deviceName + ' (' + a.model + ')';
+    if (val === optValue || val.trim().toUpperCase() === a.assetTag.toUpperCase()) {
+      match = a;
+    }
+  });
+  if (match) {
+    fillLoanDetails(match);
+  } else {
+    clearLoanDetails();
+  }
+}
+
+function fillLoanDetails(asset) {
+  document.getElementById('lAssetTag').value  = asset.assetTag;
+  document.getElementById('lSerial').value    = asset.serialNumber;
+  document.getElementById('lDeviceName').value= asset.deviceName;
+  document.getElementById('lModel').value     = asset.model;
+  document.getElementById('lCategory').value  = asset.category;
+  document.getElementById('lCondition').value = asset.condition;
+  updateLoanBtn();
+}
+
+function clearLoanDetails() {
+  ['lAssetTag','lSerial','lDeviceName','lModel','lCategory','lCondition'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  updateLoanBtn();
+}
+
+function updateLoanBtn() {
+  var btn = document.getElementById('submitLoanBtn');
+  var assetSelected = document.getElementById('lAssetTag').value !== '';
+  btn.disabled = !(APP_STATE.user.confirmed && assetSelected);
+}
+
+function submitLoan() {
+  var btn = document.getElementById('submitLoanBtn');
+  if (btn.disabled) return;
+  var assetTag = document.getElementById('lAssetTag').value;
+  if (!assetTag) { showToast('Please select an asset.', 'error'); return; }
+
+  btn.disabled = true;
+  document.getElementById('loanStatus').textContent = 'Submitting\u2026';
+
+  var loanData = {
+    borrowerName:  APP_STATE.user.name,
+    borrowerEmail: APP_STATE.user.email,
+    assetTag:      assetTag
+  };
+
+  runServer('submitLoan', loanData, function(result) {
+    showSuccessToast('Loan submitted! Transaction ID: ' + result.transactionId + '. Check your email for a receipt.');
+    document.getElementById('loanStatus').textContent = '';
+    document.getElementById('assetSearch').value = '';
+    clearLoanDetails();
+    loadAvailableAssets();
+    btn.disabled = false;
+  }, function(err) {
+    showErrorToast(err);
+    document.getElementById('loanStatus').textContent = '';
+    btn.disabled = false;
+  });
+}
+
+// ============================================================
+// TAB 2 — RETURN
+// ============================================================
+var returnDebounce = null;
+
+function onReturnSearchInput() {
+  document.getElementById('returnAssetTag').value = '';
+}
+function onReturnTagInput() {
+  document.getElementById('returnQuery').value = '';
+}
+
+function searchReturn() {
+  var query   = document.getElementById('returnQuery').value.trim();
+  var assetTag = document.getElementById('returnAssetTag').value.trim();
+
+  if (!query && !assetTag) {
+    showToast('Enter a borrower name, email, or asset tag to search.', 'error');
+    return;
+  }
+
+  var resultsDiv = document.getElementById('returnResults');
+  resultsDiv.style.display = 'block';
+  document.getElementById('returnTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--c-muted)">Searching\u2026</td></tr>';
+
+  if (assetTag) {
+    runServer('lookupLoanByAssetTag', assetTag, function(loan) {
+      renderReturnResults(loan ? [loan] : []);
+    }, showErrorToast);
+  } else {
+    runServer('lookupLoansByBorrower', query, function(loans) {
+      renderReturnResults(loans || []);
+    }, showErrorToast);
+  }
+}
+
+function clearReturnSearch() {
+  document.getElementById('returnQuery').value   = '';
+  document.getElementById('returnAssetTag').value= '';
+  document.getElementById('returnResults').style.display = 'none';
+}
+
+function renderReturnResults(loans) {
+  var tbody = document.getElementById('returnTableBody');
+  var count = document.getElementById('returnResultCount');
+  if (!loans.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="text-align:center">No open loans found.</td></tr>';
+    count.textContent = '0 results';
+    return;
+  }
+  count.textContent = loans.length + ' result(s)';
+  tbody.innerHTML = loans.map(function(loan) {
+    return '<tr>' +
+      '<td><strong>' + esc(loan.assetTag) + '</strong></td>' +
+      '<td>' + esc(loan.deviceName) + '</td>' +
+      '<td>' + esc(loan.borrowerName) + '</td>' +
+      '<td>' + esc(loan.borrowerEmail) + '</td>' +
+      '<td>' + esc(loan.loanDate) + '</td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="openReturnModal(' + JSON.stringify(loan) + ')">Return</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function openReturnModal(loan) {
+  APP_STATE.pendingReturn = loan;
+  var info = document.getElementById('returnModalInfo');
+  info.innerHTML =
+    '<div class="info-row">' +
+      infoItem('Asset Tag', loan.assetTag) +
+      infoItem('Device', loan.deviceName + ' (' + loan.category + ')') +
+      infoItem('Borrower', loan.borrowerName) +
+      infoItem('Email', loan.borrowerEmail) +
+      infoItem('Loaned Since', loan.loanDate) +
+    '</div>';
+  document.getElementById('returnAdminNotes').value = '';
+  document.getElementById('returnModal').classList.add('open');
+}
+
+function closeReturnModal() {
+  document.getElementById('returnModal').classList.remove('open');
+  APP_STATE.pendingReturn = null;
+}
+
+function confirmReturn() {
+  var loan = APP_STATE.pendingReturn;
+  if (!loan) return;
+
+  var btn = document.getElementById('confirmReturnBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processing\u2026';
+
+  var returnData = {
+    transactionId: loan.transactionId,
+    assetTag:      loan.assetTag,
+    borrowerName:  loan.borrowerName,
+    borrowerEmail: loan.borrowerEmail,
+    adminNotes:    document.getElementById('returnAdminNotes').value.trim()
+  };
+
+  runServer('submitReturn', returnData, function(result) {
+    closeReturnModal();
+    showSuccessToast('Device returned successfully. Check email for receipt.');
+    btn.disabled = false;
+    btn.textContent = 'Confirm Return';
+    // Remove row from results
+    var tbody = document.getElementById('returnTableBody');
+    var rows = tbody.querySelectorAll('tr');
+    rows.forEach(function(row) {
+      if (row.textContent.indexOf(loan.assetTag) !== -1) row.remove();
+    });
+    var remaining = tbody.querySelectorAll('tr').length;
+    document.getElementById('returnResultCount').textContent = remaining + ' result(s)';
+    if (!remaining) {
+      document.getElementById('returnResults').style.display = 'none';
+    }
+  }, function(err) {
+    showErrorToast(err);
+    btn.disabled = false;
+    btn.textContent = 'Confirm Return';
+  });
+}
+
+// ============================================================
+// TAB 3 — RECORDS
+// ============================================================
+function loadRecordsData() {
+  // Load transactions
+  document.getElementById('txnLoading').style.display    = 'block';
+  document.getElementById('txnTableWrap').style.display  = 'none';
+  document.getElementById('txnEmpty').style.display      = 'none';
+  document.getElementById('assetLoading').style.display  = 'block';
+  document.getElementById('assetTableWrap').style.display= 'none';
+  document.getElementById('assetEmpty').style.display    = 'none';
+
+  runServer('getAllTransactions', null, function(txns) {
+    APP_STATE.allTransactions = txns || [];
+    renderTransactions(APP_STATE.allTransactions);
+    document.getElementById('txnLoading').style.display = 'none';
+  }, showErrorToast);
+
+  runServer('getAllAssets', null, function(assets) {
+    APP_STATE.allAssets = assets || [];
+    renderAssetsGrid(APP_STATE.allAssets);
+    document.getElementById('assetLoading').style.display = 'none';
+  }, showErrorToast);
+}
+
+/* ── Transactions ── */
+function renderTransactions(txns) {
+  var wrap  = document.getElementById('txnTableWrap');
+  var empty = document.getElementById('txnEmpty');
+  var tbody = document.getElementById('txnTableBody');
+
+  if (!txns.length) { empty.style.display = 'block'; wrap.style.display = 'none'; return; }
+  empty.style.display = 'none'; wrap.style.display = 'block';
+
+  tbody.innerHTML = txns.map(function(t) {
+    var typeBadge = t.type === 'Loan'
+      ? '<span class="badge badge-loan">Loan</span>'
+      : '<span class="badge badge-return">Return</span>';
+    return '<tr>' +
+      '<td><code style="font-size:11px;">' + esc(t.transactionId) + '</code></td>' +
+      '<td>' + esc(t.assetTag) + '</td>' +
+      '<td>' + esc(t.deviceName) + '</td>' +
+      '<td>' + esc(t.borrowerName) + '<br><small style="color:var(--c-muted)">' + esc(t.borrowerEmail) + '</small></td>' +
+      '<td>' + esc(t.loanDate) + '</td>' +
+      '<td>' + (t.returnDate ? esc(t.returnDate) : '<span style="color:var(--c-muted)">—</span>') + '</td>' +
+      '<td>' + typeBadge + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function filterTransactions(q) {
+  q = q.toLowerCase();
+  var filtered = APP_STATE.allTransactions.filter(function(t) {
+    return (t.transactionId + t.assetTag + t.deviceName + t.borrowerName + t.borrowerEmail + t.type)
+      .toLowerCase().indexOf(q) !== -1;
+  });
+  renderTransactions(filtered);
+}
+
+/* ── Assets Grid ── */
+function renderAssetsGrid(assets) {
+  var wrap  = document.getElementById('assetTableWrap');
+  var empty = document.getElementById('assetEmpty');
+  var tbody = document.getElementById('assetTableBody');
+
+  if (!assets.length) { empty.style.display = 'block'; wrap.style.display = 'none'; return; }
+  empty.style.display = 'none'; wrap.style.display = 'block';
+
+  tbody.innerHTML = assets.map(function(a, idx) {
+    var statusBadge = {
+      'Available': '<span class="badge badge-avail">Available</span>',
+      'On Loan':   '<span class="badge badge-loan">On Loan</span>',
+      'Retired':   '<span class="badge badge-retired">Retired</span>'
+    }[a.status] || a.status;
+
+    return '<tr id="asset-row-' + idx + '">' +
+      '<td><strong>' + esc(a.assetTag) + '</strong></td>' +
+      '<td class="cell-serial">'    + esc(a.serialNumber) + '</td>' +
+      '<td class="cell-device">'    + esc(a.deviceName)   + '</td>' +
+      '<td class="cell-model">'     + esc(a.model)        + '</td>' +
+      '<td class="cell-category">'  + esc(a.category)     + '</td>' +
+      '<td class="cell-condition">' + esc(a.condition)     + '</td>' +
+      '<td class="cell-status">'    + statusBadge          + '</td>' +
+      '<td class="cell-notes">'     + esc(a.notes)         + '</td>' +
+      '<td class="td-actions">' +
+        '<button class="btn btn-secondary btn-sm" onclick="editAssetRow(' + idx + ')">Edit</button>' +
+      '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function editAssetRow(idx) {
+  var a = APP_STATE.allAssets[idx];
+  var row = document.getElementById('asset-row-' + idx);
+  if (!row) return;
+
+  var condOptions = ['New','Good','Fair','Poor'].map(function(v) {
+    return '<option value="' + v + '"' + (a.condition === v ? ' selected' : '') + '>' + v + '</option>';
+  }).join('');
+  var statusOptions = ['Available','On Loan','Retired'].map(function(v) {
+    return '<option value="' + v + '"' + (a.status === v ? ' selected' : '') + '>' + v + '</option>';
+  }).join('');
+
+  row.innerHTML =
+    '<td><strong>' + esc(a.assetTag) + '</strong></td>' +
+    '<td><input type="text" id="e-serial-'    + idx + '" value="' + esc(a.serialNumber) + '" style="width:100%;padding:4px 6px;" /></td>' +
+    '<td><input type="text" id="e-device-'    + idx + '" value="' + esc(a.deviceName)   + '" style="width:100%;padding:4px 6px;" /></td>' +
+    '<td><input type="text" id="e-model-'     + idx + '" value="' + esc(a.model)        + '" style="width:100%;padding:4px 6px;" /></td>' +
+    '<td><input type="text" id="e-category-'  + idx + '" value="' + esc(a.category)     + '" style="width:100%;padding:4px 6px;" /></td>' +
+    '<td><select id="e-condition-' + idx + '" style="width:100%;padding:4px 6px;">' + condOptions + '</select></td>' +
+    '<td><select id="e-status-'    + idx + '" style="width:100%;padding:4px 6px;">' + statusOptions + '</select></td>' +
+    '<td><input type="text" id="e-notes-'     + idx + '" value="' + esc(a.notes)        + '" style="width:100%;padding:4px 6px;" /></td>' +
+    '<td class="td-actions">' +
+      '<button class="btn btn-success btn-sm" onclick="saveAssetRow(' + idx + ')">Save</button>' +
+      '<button class="btn btn-secondary btn-sm" onclick="cancelAssetEdit(' + idx + ')">Cancel</button>' +
+    '</td>';
+}
+
+function cancelAssetEdit(idx) {
+  renderAssetsGrid(APP_STATE.allAssets);
+}
+
+function saveAssetRow(idx) {
+  var a = APP_STATE.allAssets[idx];
+  var updated = {
+    serialNumber: document.getElementById('e-serial-'    + idx).value.trim(),
+    deviceName:   document.getElementById('e-device-'    + idx).value.trim(),
+    model:        document.getElementById('e-model-'     + idx).value.trim(),
+    category:     document.getElementById('e-category-'  + idx).value.trim(),
+    condition:    document.getElementById('e-condition-'  + idx).value,
+    status:       document.getElementById('e-status-'    + idx).value,
+    notes:        document.getElementById('e-notes-'     + idx).value.trim()
+  };
+
+  var saveBtn = document.querySelector('#asset-row-' + idx + ' .btn-success');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026'; }
+
+  runServer('updateAsset', { assetTag: a.assetTag, updatedFields: updated }, function() {
+    // Merge update into state
+    Object.assign(APP_STATE.allAssets[idx], updated);
+    showSuccessToast('Asset ' + a.assetTag + ' updated.');
+    renderAssetsGrid(APP_STATE.allAssets);
+  }, function(err) {
+    showErrorToast(err);
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+  });
+}
+
+/* ── Add Asset Modal ── */
+function openAddAssetModal() {
+  ['aaTag','aaSerial','aaDevice','aaModel','aaCategory','aaNotes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('aaCondition').value = 'Good';
+  document.getElementById('addAssetModal').classList.add('open');
+}
+
+function closeAddAssetModal() {
+  document.getElementById('addAssetModal').classList.remove('open');
+}
+
+function saveNewAsset() {
+  var tag    = document.getElementById('aaTag').value.trim();
+  var device = document.getElementById('aaDevice').value.trim();
+  if (!tag)    { showToast('Asset Tag is required.', 'error'); return; }
+  if (!device) { showToast('Device Name is required.', 'error'); return; }
+
+  var btn = document.getElementById('saveAssetBtn');
+  btn.disabled = true; btn.textContent = 'Adding\u2026';
+
+  var assetData = {
+    assetTag:     tag,
+    serialNumber: document.getElementById('aaSerial').value.trim(),
+    deviceName:   device,
+    model:        document.getElementById('aaModel').value.trim(),
+    category:     document.getElementById('aaCategory').value.trim(),
+    condition:    document.getElementById('aaCondition').value,
+    notes:        document.getElementById('aaNotes').value.trim()
+  };
+
+  runServer('addAsset', assetData, function(result) {
+    closeAddAssetModal();
+    showSuccessToast('Asset ' + tag + ' added successfully.');
+    btn.disabled = false; btn.textContent = 'Add Asset';
+    // Reload assets
+    runServer('getAllAssets', null, function(assets) {
+      APP_STATE.allAssets = assets || [];
+      renderAssetsGrid(APP_STATE.allAssets);
+    }, showErrorToast);
+  }, function(err) {
+    showErrorToast(err);
+    btn.disabled = false; btn.textContent = 'Add Asset';
+  });
+}
+
+/* ── CSV Import ── */
+function handleCSVImport(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  event.target.value = ''; // reset input
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var csvString = e.target.result;
+    var summaryDiv = document.getElementById('importSummary');
+    summaryDiv.style.display = 'block';
+    summaryDiv.innerHTML = '<p>Importing\u2026 <span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--c-primary);"></span></p>';
+
+    runServer('importAssetsFromCSV', csvString, function(result) {
+      var hasErrors = result.errors && result.errors.length > 0;
+      summaryDiv.className = 'import-summary' + (hasErrors ? ' has-errors' : '');
+      var html = '<strong>Import Complete:</strong> ' +
+        result.imported + ' imported, ' +
+        result.skipped  + ' skipped (duplicates)';
+      if (hasErrors) {
+        html += '<ul class="import-errors">' +
+          result.errors.map(function(e) { return '<li>' + esc(e) + '</li>'; }).join('') +
+          '</ul>';
+      }
+      summaryDiv.innerHTML = html;
+
+      // Reload assets
+      runServer('getAllAssets', null, function(assets) {
+        APP_STATE.allAssets = assets || [];
+        renderAssetsGrid(APP_STATE.allAssets);
+      }, showErrorToast);
+    }, function(err) {
+      summaryDiv.className = 'import-summary has-errors';
+      summaryDiv.innerHTML = '<strong>Import failed:</strong> ' + esc(String(err.message || err));
+    });
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function infoItem(label, value) {
+  return '<div class="info-item"><label>' + esc(label) + '</label><span>' + esc(value) + '</span></div>';
+}
+
+// ============================================================
+// INIT — load available assets on first render
+// ============================================================
+window.addEventListener('DOMContentLoaded', function() {
+  loadAvailableAssets();
+});
+</script>
+</body>
 </html>
