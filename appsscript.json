@@ -1,5 +1,5 @@
 {
-  "timeZone": "KualaLumpur/Singapore",
+  "timeZone": "Asia/Kuala_Lumpur",
   "runtimeVersion": "V8",
   "webapp": {
     "executeAs": "USER_DEPLOYING",
