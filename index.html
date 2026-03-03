@@ -237,11 +237,11 @@
       <div class="verify-row">
         <div class="field">
           <label for="vName">Full Name</label>
-          <input type="text" id="vName" placeholder="e.g. Jane Smith" autocomplete="name" />
+          <input type="text" id="vName" placeholder="e.g. Jane Smith" autocomplete="name" onkeydown="if(event.key==='Enter') confirmIdentity()" />
         </div>
         <div class="field">
           <label for="vEmail">Email Address</label>
-          <input type="email" id="vEmail" placeholder="e.g. jane@school.edu" autocomplete="email" />
+          <input type="email" id="vEmail" placeholder="e.g. jane@school.edu" autocomplete="email" onkeydown="if(event.key==='Enter') confirmIdentity()" />
         </div>
         <button class="btn btn-primary" onclick="confirmIdentity()">Confirm Identity</button>
       </div>
@@ -335,12 +335,12 @@
         <div class="form-group" style="flex:1; min-width:200px;">
           <label for="returnQuery">Search by Borrower Name or Email</label>
           <input type="text" id="returnQuery" placeholder="e.g. Jane Smith or jane@school.edu"
-            oninput="onReturnSearchInput()" />
+            oninput="onReturnSearchInput()" onkeydown="if(event.key==='Enter') searchReturn()" />
         </div>
         <div class="form-group" style="flex:1; min-width:160px;">
           <label for="returnAssetTag">Search by Asset Tag</label>
           <input type="text" id="returnAssetTag" placeholder="e.g. PLT-001"
-            oninput="onReturnTagInput()" />
+            oninput="onReturnTagInput()" onkeydown="if(event.key==='Enter') searchReturn()" />
         </div>
         <div style="display:flex; align-items:flex-end; gap:8px;">
           <button class="btn btn-primary" onclick="searchReturn()">Search</button>
@@ -518,7 +518,8 @@ var APP_STATE = {
   availableAssets: [],
   allAssets:       [],
   allTransactions: [],
-  pendingReturn:   null   // loan object awaiting return confirmation
+  pendingReturn:   null,  // loan object awaiting return confirmation
+  returnResults:   []     // current return search results (indexed by row)
 };
 
 // ============================================================
@@ -685,7 +686,6 @@ function submitLoan() {
 // ============================================================
 // TAB 2 — RETURN
 // ============================================================
-var returnDebounce = null;
 
 function onReturnSearchInput() {
   document.getElementById('returnAssetTag').value = '';
@@ -725,6 +725,7 @@ function clearReturnSearch() {
 }
 
 function renderReturnResults(loans) {
+  APP_STATE.returnResults = loans;
   var tbody = document.getElementById('returnTableBody');
   var count = document.getElementById('returnResultCount');
   if (!loans.length) {
@@ -733,19 +734,20 @@ function renderReturnResults(loans) {
     return;
   }
   count.textContent = loans.length + ' result(s)';
-  tbody.innerHTML = loans.map(function(loan) {
+  tbody.innerHTML = loans.map(function(loan, idx) {
     return '<tr>' +
       '<td><strong>' + esc(loan.assetTag) + '</strong></td>' +
       '<td>' + esc(loan.deviceName) + '</td>' +
       '<td>' + esc(loan.borrowerName) + '</td>' +
       '<td>' + esc(loan.borrowerEmail) + '</td>' +
       '<td>' + esc(loan.loanDate) + '</td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="openReturnModal(' + JSON.stringify(loan) + ')">Return</button></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="openReturnModal(' + idx + ')">Return</button></td>' +
       '</tr>';
   }).join('');
 }
 
-function openReturnModal(loan) {
+function openReturnModal(idx) {
+  var loan = APP_STATE.returnResults[idx];
   APP_STATE.pendingReturn = loan;
   var info = document.getElementById('returnModalInfo');
   info.innerHTML =
