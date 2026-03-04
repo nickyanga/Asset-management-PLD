@@ -115,7 +115,7 @@
       border-color: var(--c-primary);
       box-shadow: 0 0 0 3px rgba(37,99,235,.12);
     }
-    input[readonly], input[disabled] {
+    input[readonly], input[disabled], select[disabled] {
       background: var(--c-bg);
       color: var(--c-muted);
       cursor: not-allowed;
@@ -285,35 +285,29 @@
           <input
             type="text" id="assetSearch"
             list="assetOptions"
-            placeholder="Type asset tag or device name..."
+            placeholder="Type serial number..."
             oninput="onAssetSearchInput(this.value)"
             autocomplete="off"
           />
           <datalist id="assetOptions"></datalist>
         </div>
         <div class="form-group">
-          <label>Asset Tag</label>
-          <input type="text" id="lAssetTag" readonly />
-        </div>
-        <div class="form-group">
           <label>Serial Number</label>
           <input type="text" id="lSerial" readonly />
-        </div>
-        <div class="form-group">
-          <label>Device Name</label>
-          <input type="text" id="lDeviceName" readonly />
         </div>
         <div class="form-group">
           <label>Model</label>
           <input type="text" id="lModel" readonly />
         </div>
         <div class="form-group">
-          <label>Category</label>
-          <input type="text" id="lCategory" readonly />
-        </div>
-        <div class="form-group">
           <label>Condition</label>
-          <input type="text" id="lCondition" readonly />
+          <select id="lCondition" disabled>
+            <option value="" disabled selected>Select asset first</option>
+            <option value="New">New</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+            <option value="Poor">Poor</option>
+          </select>
         </div>
       </div>
       <div style="margin-top:18px; display:flex; gap:10px; align-items:center;">
@@ -338,8 +332,8 @@
             oninput="onReturnSearchInput()" onkeydown="if(event.key==='Enter') searchReturn()" />
         </div>
         <div class="form-group" style="flex:1; min-width:160px;">
-          <label for="returnAssetTag">Search by Serial Number</label>
-          <input type="text" id="returnAssetTag"
+          <label for="returnSerial">Search by Serial Number</label>
+          <input type="text" id="returnSerial"
             oninput="onReturnTagInput()" onkeydown="if(event.key==='Enter') searchReturn()" />
         </div>
         <div style="display:flex; align-items:flex-end; gap:8px;">
@@ -359,7 +353,6 @@
           <thead>
             <tr>
               <th>Serial Number</th>
-              <th>Device</th>
               <th>Borrower</th>
               <th>Email</th>
               <th>Loaned Since</th>
@@ -391,7 +384,6 @@
             <tr>
               <th>ID</th>
               <th>Serial Number</th>
-              <th>Device</th>
               <th>Borrower</th>
               <th>Loan Date</th>
               <th>Return Date</th>
@@ -424,11 +416,8 @@
         <table id="assetTable">
           <thead>
             <tr>
-              <th>Asset Tag</th>
-              <th>Serial</th>
-              <th>Device Name</th>
+              <th>Serial Number</th>
               <th>Model</th>
-              <th>Category</th>
               <th>Condition</th>
               <th>Status</th>
               <th>Notes</th>
@@ -466,24 +455,12 @@
     <h3>Add New Asset</h3>
     <div class="form-grid">
       <div class="form-group">
-        <label for="aaTag">Asset Tag *</label>
-        <input type="text" id="aaTag" placeholder="e.g. PLT-001" />
-      </div>
-      <div class="form-group">
-        <label for="aaSerial">Serial Number</label>
+        <label for="aaSerial">Serial Number *</label>
         <input type="text" id="aaSerial" placeholder="e.g. SN123456" />
-      </div>
-      <div class="form-group">
-        <label for="aaDevice">Device Name *</label>
-        <input type="text" id="aaDevice" placeholder="e.g. iPad 9th Gen" />
       </div>
       <div class="form-group">
         <label for="aaModel">Model</label>
         <input type="text" id="aaModel" placeholder="e.g. MK2E3LL/A" />
-      </div>
-      <div class="form-group">
-        <label for="aaCategory">Category</label>
-        <input type="text" id="aaCategory" placeholder="e.g. Tablet" />
       </div>
       <div class="form-group">
         <label for="aaCondition">Condition</label>
@@ -609,18 +586,18 @@ function populateAssetDatalist() {
   dl.innerHTML = '';
   APP_STATE.availableAssets.forEach(function(a) {
     var opt = document.createElement('option');
-    opt.value = a.assetTag + ' – ' + a.deviceName + ' (' + a.model + ')';
-    opt.dataset.tag = a.assetTag;
+    opt.value = a.serialNumber + ' (' + a.model + ')';
+    opt.dataset.serial = a.serialNumber;
     dl.appendChild(opt);
   });
 }
 
 function onAssetSearchInput(val) {
-  // Find matching asset by asset tag prefix in value
+  // Find matching asset by serial number in value
   var match = null;
   APP_STATE.availableAssets.forEach(function(a) {
-    var optValue = a.assetTag + ' \u2013 ' + a.deviceName + ' (' + a.model + ')';
-    if (val === optValue || val.trim().toUpperCase() === a.assetTag.toUpperCase()) {
+    var optValue = a.serialNumber + ' (' + a.model + ')';
+    if (val === optValue || val.trim().toUpperCase() === a.serialNumber.toUpperCase()) {
       match = a;
     }
   });
@@ -632,33 +609,34 @@ function onAssetSearchInput(val) {
 }
 
 function fillLoanDetails(asset) {
-  document.getElementById('lAssetTag').value  = asset.assetTag;
   document.getElementById('lSerial').value    = asset.serialNumber;
-  document.getElementById('lDeviceName').value= asset.deviceName;
   document.getElementById('lModel').value     = asset.model;
-  document.getElementById('lCategory').value  = asset.category;
-  document.getElementById('lCondition').value = asset.condition;
+  var condSelect = document.getElementById('lCondition');
+  condSelect.disabled = false;
+  condSelect.value = asset.condition;
   updateLoanBtn();
 }
 
 function clearLoanDetails() {
-  ['lAssetTag','lSerial','lDeviceName','lModel','lCategory','lCondition'].forEach(function(id) {
-    document.getElementById(id).value = '';
-  });
+  document.getElementById('lSerial').value = '';
+  document.getElementById('lModel').value = '';
+  var condSelect = document.getElementById('lCondition');
+  condSelect.value = '';
+  condSelect.disabled = true;
   updateLoanBtn();
 }
 
 function updateLoanBtn() {
   var btn = document.getElementById('submitLoanBtn');
-  var assetSelected = document.getElementById('lAssetTag').value !== '';
+  var assetSelected = document.getElementById('lSerial').value !== '';
   btn.disabled = !(APP_STATE.user.confirmed && assetSelected);
 }
 
 function submitLoan() {
   var btn = document.getElementById('submitLoanBtn');
   if (btn.disabled) return;
-  var assetTag = document.getElementById('lAssetTag').value;
-  if (!assetTag) { showToast('Please select an asset.', 'error'); return; }
+  var serialNumber = document.getElementById('lSerial').value;
+  if (!serialNumber) { showToast('Please select an asset.', 'error'); return; }
 
   btn.disabled = true;
   document.getElementById('loanStatus').textContent = 'Submitting\u2026';
@@ -666,7 +644,8 @@ function submitLoan() {
   var loanData = {
     borrowerName:  APP_STATE.user.name,
     borrowerEmail: APP_STATE.user.email,
-    assetTag:      assetTag
+    serialNumber:  serialNumber,
+    condition:     document.getElementById('lCondition').value
   };
 
   runServer('submitLoan', loanData, function(result) {
@@ -688,27 +667,27 @@ function submitLoan() {
 // ============================================================
 
 function onReturnSearchInput() {
-  document.getElementById('returnAssetTag').value = '';
+  document.getElementById('returnSerial').value = '';
 }
 function onReturnTagInput() {
   document.getElementById('returnQuery').value = '';
 }
 
 function searchReturn() {
-  var query   = document.getElementById('returnQuery').value.trim();
-  var assetTag = document.getElementById('returnAssetTag').value.trim();
+  var query  = document.getElementById('returnQuery').value.trim();
+  var serial = document.getElementById('returnSerial').value.trim();
 
-  if (!query && !assetTag) {
-    showToast('Enter a borrower name, email, or asset tag to search.', 'error');
+  if (!query && !serial) {
+    showToast('Enter a borrower name, email, or serial number to search.', 'error');
     return;
   }
 
   var resultsDiv = document.getElementById('returnResults');
   resultsDiv.style.display = 'block';
-  document.getElementById('returnTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--c-muted)">Searching\u2026</td></tr>';
+  document.getElementById('returnTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--c-muted)">Searching\u2026</td></tr>';
 
-  if (assetTag) {
-    runServer('lookupLoanByAssetTag', assetTag, function(loan) {
+  if (serial) {
+    runServer('lookupLoanBySerial', serial, function(loan) {
       renderReturnResults(loan ? [loan] : []);
     }, showErrorToast);
   } else {
@@ -719,8 +698,8 @@ function searchReturn() {
 }
 
 function clearReturnSearch() {
-  document.getElementById('returnQuery').value   = '';
-  document.getElementById('returnAssetTag').value= '';
+  document.getElementById('returnQuery').value  = '';
+  document.getElementById('returnSerial').value = '';
   document.getElementById('returnResults').style.display = 'none';
 }
 
@@ -729,15 +708,14 @@ function renderReturnResults(loans) {
   var tbody = document.getElementById('returnTableBody');
   var count = document.getElementById('returnResultCount');
   if (!loans.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="text-align:center">No open loans found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state" style="text-align:center">No open loans found.</td></tr>';
     count.textContent = '0 results';
     return;
   }
   count.textContent = loans.length + ' result(s)';
   tbody.innerHTML = loans.map(function(loan, idx) {
     return '<tr>' +
-      '<td><strong>' + esc(loan.assetTag) + '</strong></td>' +
-      '<td>' + esc(loan.deviceName) + '</td>' +
+      '<td><strong>' + esc(loan.serialNumber) + '</strong></td>' +
       '<td>' + esc(loan.borrowerName) + '</td>' +
       '<td>' + esc(loan.borrowerEmail) + '</td>' +
       '<td>' + esc(loan.loanDate) + '</td>' +
@@ -752,8 +730,8 @@ function openReturnModal(idx) {
   var info = document.getElementById('returnModalInfo');
   info.innerHTML =
     '<div class="info-row">' +
-      infoItem('Asset Tag', loan.assetTag) +
-      infoItem('Device', loan.deviceName + ' (' + loan.category + ')') +
+      infoItem('Serial Number', loan.serialNumber) +
+      infoItem('Condition', loan.condition) +
       infoItem('Borrower', loan.borrowerName) +
       infoItem('Email', loan.borrowerEmail) +
       infoItem('Loaned Since', loan.loanDate) +
@@ -777,7 +755,7 @@ function confirmReturn() {
 
   var returnData = {
     transactionId: loan.transactionId,
-    assetTag:      loan.assetTag,
+    serialNumber:  loan.serialNumber,
     borrowerName:  loan.borrowerName,
     borrowerEmail: loan.borrowerEmail,
     adminNotes:    document.getElementById('returnAdminNotes').value.trim()
@@ -792,7 +770,7 @@ function confirmReturn() {
     var tbody = document.getElementById('returnTableBody');
     var rows = tbody.querySelectorAll('tr');
     rows.forEach(function(row) {
-      if (row.textContent.indexOf(loan.assetTag) !== -1) row.remove();
+      if (row.textContent.indexOf(loan.serialNumber) !== -1) row.remove();
     });
     var remaining = tbody.querySelectorAll('tr').length;
     document.getElementById('returnResultCount').textContent = remaining + ' result(s)';
@@ -846,8 +824,7 @@ function renderTransactions(txns) {
       : '<span class="badge badge-return">Return</span>';
     return '<tr>' +
       '<td><code style="font-size:11px;">' + esc(t.transactionId) + '</code></td>' +
-      '<td>' + esc(t.assetTag) + '</td>' +
-      '<td>' + esc(t.deviceName) + '</td>' +
+      '<td>' + esc(t.serialNumber) + '</td>' +
       '<td>' + esc(t.borrowerName) + '<br><small style="color:var(--c-muted)">' + esc(t.borrowerEmail) + '</small></td>' +
       '<td>' + esc(t.loanDate) + '</td>' +
       '<td>' + (t.returnDate ? esc(t.returnDate) : '<span style="color:var(--c-muted)">—</span>') + '</td>' +
@@ -859,7 +836,7 @@ function renderTransactions(txns) {
 function filterTransactions(q) {
   q = q.toLowerCase();
   var filtered = APP_STATE.allTransactions.filter(function(t) {
-    return (t.transactionId + t.assetTag + t.deviceName + t.borrowerName + t.borrowerEmail + t.type)
+    return (t.transactionId + t.serialNumber + t.borrowerName + t.borrowerEmail + t.type)
       .toLowerCase().indexOf(q) !== -1;
   });
   renderTransactions(filtered);
@@ -882,11 +859,8 @@ function renderAssetsGrid(assets) {
     }[a.status] || a.status;
 
     return '<tr id="asset-row-' + idx + '">' +
-      '<td><strong>' + esc(a.assetTag) + '</strong></td>' +
-      '<td class="cell-serial">'    + esc(a.serialNumber) + '</td>' +
-      '<td class="cell-device">'    + esc(a.deviceName)   + '</td>' +
+      '<td><strong>' + esc(a.serialNumber) + '</strong></td>' +
       '<td class="cell-model">'     + esc(a.model)        + '</td>' +
-      '<td class="cell-category">'  + esc(a.category)     + '</td>' +
       '<td class="cell-condition">' + esc(a.condition)     + '</td>' +
       '<td class="cell-status">'    + statusBadge          + '</td>' +
       '<td class="cell-notes">'     + esc(a.notes)         + '</td>' +
@@ -910,11 +884,8 @@ function editAssetRow(idx) {
   }).join('');
 
   row.innerHTML =
-    '<td><strong>' + esc(a.assetTag) + '</strong></td>' +
-    '<td><input type="text" id="e-serial-'    + idx + '" value="' + esc(a.serialNumber) + '" style="width:100%;padding:4px 6px;" /></td>' +
-    '<td><input type="text" id="e-device-'    + idx + '" value="' + esc(a.deviceName)   + '" style="width:100%;padding:4px 6px;" /></td>' +
+    '<td><strong>' + esc(a.serialNumber) + '</strong></td>' +
     '<td><input type="text" id="e-model-'     + idx + '" value="' + esc(a.model)        + '" style="width:100%;padding:4px 6px;" /></td>' +
-    '<td><input type="text" id="e-category-'  + idx + '" value="' + esc(a.category)     + '" style="width:100%;padding:4px 6px;" /></td>' +
     '<td><select id="e-condition-' + idx + '" style="width:100%;padding:4px 6px;">' + condOptions + '</select></td>' +
     '<td><select id="e-status-'    + idx + '" style="width:100%;padding:4px 6px;">' + statusOptions + '</select></td>' +
     '<td><input type="text" id="e-notes-'     + idx + '" value="' + esc(a.notes)        + '" style="width:100%;padding:4px 6px;" /></td>' +
@@ -931,22 +902,19 @@ function cancelAssetEdit(idx) {
 function saveAssetRow(idx) {
   var a = APP_STATE.allAssets[idx];
   var updated = {
-    serialNumber: document.getElementById('e-serial-'    + idx).value.trim(),
-    deviceName:   document.getElementById('e-device-'    + idx).value.trim(),
-    model:        document.getElementById('e-model-'     + idx).value.trim(),
-    category:     document.getElementById('e-category-'  + idx).value.trim(),
-    condition:    document.getElementById('e-condition-'  + idx).value,
-    status:       document.getElementById('e-status-'    + idx).value,
-    notes:        document.getElementById('e-notes-'     + idx).value.trim()
+    model:     document.getElementById('e-model-'     + idx).value.trim(),
+    condition: document.getElementById('e-condition-'  + idx).value,
+    status:    document.getElementById('e-status-'    + idx).value,
+    notes:     document.getElementById('e-notes-'     + idx).value.trim()
   };
 
   var saveBtn = document.querySelector('#asset-row-' + idx + ' .btn-success');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026'; }
 
-  runServer('updateAsset', { assetTag: a.assetTag, updatedFields: updated }, function() {
+  runServer('updateAsset', { serialNumber: a.serialNumber, updatedFields: updated }, function() {
     // Merge update into state
     Object.assign(APP_STATE.allAssets[idx], updated);
-    showSuccessToast('Asset ' + a.assetTag + ' updated.');
+    showSuccessToast('Asset ' + a.serialNumber + ' updated.');
     renderAssetsGrid(APP_STATE.allAssets);
   }, function(err) {
     showErrorToast(err);
@@ -956,7 +924,7 @@ function saveAssetRow(idx) {
 
 /* ── Add Asset Modal ── */
 function openAddAssetModal() {
-  ['aaTag','aaSerial','aaDevice','aaModel','aaCategory','aaNotes'].forEach(function(id) {
+  ['aaSerial','aaModel','aaNotes'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   document.getElementById('aaCondition').value = 'Good';
@@ -968,27 +936,22 @@ function closeAddAssetModal() {
 }
 
 function saveNewAsset() {
-  var tag    = document.getElementById('aaTag').value.trim();
-  var device = document.getElementById('aaDevice').value.trim();
-  if (!tag)    { showToast('Asset Tag is required.', 'error'); return; }
-  if (!device) { showToast('Device Name is required.', 'error'); return; }
+  var serial = document.getElementById('aaSerial').value.trim();
+  if (!serial) { showToast('Serial Number is required.', 'error'); return; }
 
   var btn = document.getElementById('saveAssetBtn');
   btn.disabled = true; btn.textContent = 'Adding\u2026';
 
   var assetData = {
-    assetTag:     tag,
-    serialNumber: document.getElementById('aaSerial').value.trim(),
-    deviceName:   device,
+    serialNumber: serial,
     model:        document.getElementById('aaModel').value.trim(),
-    category:     document.getElementById('aaCategory').value.trim(),
     condition:    document.getElementById('aaCondition').value,
     notes:        document.getElementById('aaNotes').value.trim()
   };
 
   runServer('addAsset', assetData, function(result) {
     closeAddAssetModal();
-    showSuccessToast('Asset ' + tag + ' added successfully.');
+    showSuccessToast('Asset ' + serial + ' added successfully.');
     btn.disabled = false; btn.textContent = 'Add Asset';
     // Reload assets
     runServer('getAllAssets', null, function(assets) {

@@ -66,8 +66,7 @@ function generateTxnId_() {
 // ============================================================
 
 function sendLoanReceipt_(data) {
-  var subject =
-    "PLD Loan Receipt \u2013 " + data.assetTag + " " + data.deviceName;
+  var subject = "PLD Loan Receipt \u2013 " + data.serialNumber;
   var body = [
     "PLD Loan Receipt",
     "================",
@@ -81,11 +80,8 @@ function sendLoanReceipt_(data) {
     "",
     "Device Details",
     "--------------",
-    "Asset Tag      : " + data.assetTag,
     "Serial Number  : " + data.serialNumber,
-    "Device Name    : " + data.deviceName,
     "Model          : " + data.model,
-    "Category       : " + data.category,
     "Condition      : " + data.condition,
     "",
     "Please return the device in the same condition.",
@@ -102,8 +98,7 @@ function sendLoanReceipt_(data) {
 }
 
 function sendReturnReceipt_(data) {
-  var subject =
-    "PLD Return Receipt \u2013 " + data.assetTag + " " + data.deviceName;
+  var subject = "PLD Return Receipt \u2013 " + data.serialNumber;
 
   // Calculate loan duration
   var loanMs = new Date(data.returnDate) - new Date(data.loanDate);
@@ -126,11 +121,8 @@ function sendReturnReceipt_(data) {
     "",
     "Device Details",
     "--------------",
-    "Asset Tag      : " + data.assetTag,
     "Serial Number  : " + data.serialNumber,
-    "Device Name    : " + data.deviceName,
     "Model          : " + data.model,
-    "Category       : " + data.category,
     "Condition      : " + data.condition,
     "",
     "Thank you for returning the device.",
@@ -157,17 +149,14 @@ function getAvailableAssets() {
   var rows = getSheetData_(sheet);
   var assets = [];
   rows.forEach(function (row) {
-    var status = String(row[6] || "").trim();
+    var status = String(row[3] || "").trim();
     if (status === "Available") {
       assets.push({
-        assetTag: String(row[0] || "").trim(),
-        serialNumber: String(row[1] || "").trim(),
-        deviceName: String(row[2] || "").trim(),
-        model: String(row[3] || "").trim(),
-        category: String(row[4] || "").trim(),
-        condition: String(row[5] || "").trim(),
+        serialNumber: String(row[0] || "").trim(),
+        model: String(row[1] || "").trim(),
+        condition: String(row[2] || "").trim(),
         status: status,
-        notes: String(row[7] || "").trim(),
+        notes: String(row[4] || "").trim(),
       });
     }
   });
@@ -175,10 +164,10 @@ function getAvailableAssets() {
 }
 
 /**
- * Returns a single asset object by AssetTag, or null if not found.
+ * Returns a single asset object by SerialNumber, or null if not found.
  */
-function getAssetByTag(assetTag) {
-  var tag = String(assetTag || "")
+function getAssetBySerial(serialNumber) {
+  var sn = String(serialNumber || "")
     .trim()
     .toUpperCase();
   var sheet = getAssetsSheet_();
@@ -187,27 +176,24 @@ function getAssetByTag(assetTag) {
     if (
       String(rows[i][0] || "")
         .trim()
-        .toUpperCase() === tag
+        .toUpperCase() === sn
     ) {
       return {
-        assetTag: String(rows[i][0] || "").trim(),
-        serialNumber: String(rows[i][1] || "").trim(),
-        deviceName: String(rows[i][2] || "").trim(),
-        model: String(rows[i][3] || "").trim(),
-        category: String(rows[i][4] || "").trim(),
-        condition: String(rows[i][5] || "").trim(),
-        status: String(rows[i][6] || "").trim(),
-        notes: String(rows[i][7] || "").trim(),
-        dateAdded: rows[i][8]
+        serialNumber: String(rows[i][0] || "").trim(),
+        model: String(rows[i][1] || "").trim(),
+        condition: String(rows[i][2] || "").trim(),
+        status: String(rows[i][3] || "").trim(),
+        notes: String(rows[i][4] || "").trim(),
+        dateAdded: rows[i][5]
           ? Utilities.formatDate(
-              new Date(rows[i][8]),
+              new Date(rows[i][5]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
           : "",
-        lastModified: rows[i][9]
+        lastModified: rows[i][6]
           ? Utilities.formatDate(
-              new Date(rows[i][9]),
+              new Date(rows[i][6]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
@@ -227,24 +213,21 @@ function getAllAssets() {
   return rows
     .map(function (row) {
       return {
-        assetTag: String(row[0] || "").trim(),
-        serialNumber: String(row[1] || "").trim(),
-        deviceName: String(row[2] || "").trim(),
-        model: String(row[3] || "").trim(),
-        category: String(row[4] || "").trim(),
-        condition: String(row[5] || "").trim(),
-        status: String(row[6] || "").trim(),
-        notes: String(row[7] || "").trim(),
-        dateAdded: row[8]
+        serialNumber: String(row[0] || "").trim(),
+        model: String(row[1] || "").trim(),
+        condition: String(row[2] || "").trim(),
+        status: String(row[3] || "").trim(),
+        notes: String(row[4] || "").trim(),
+        dateAdded: row[5]
           ? Utilities.formatDate(
-              new Date(row[8]),
+              new Date(row[5]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd",
             )
           : "",
-        lastModified: row[9]
+        lastModified: row[6]
           ? Utilities.formatDate(
-              new Date(row[9]),
+              new Date(row[6]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
@@ -252,7 +235,7 @@ function getAllAssets() {
       };
     })
     .filter(function (a) {
-      return a.assetTag !== "";
+      return a.serialNumber !== "";
     });
 }
 
@@ -266,28 +249,26 @@ function getAllTransactions() {
     .map(function (row) {
       return {
         transactionId: String(row[0] || "").trim(),
-        assetTag: String(row[1] || "").trim(),
-        deviceName: String(row[2] || "").trim(),
-        category: String(row[3] || "").trim(),
-        condition: String(row[4] || "").trim(),
-        borrowerName: String(row[5] || "").trim(),
-        borrowerEmail: String(row[6] || "").trim(),
-        loanDate: row[7]
+        serialNumber: String(row[1] || "").trim(),
+        condition: String(row[2] || "").trim(),
+        borrowerName: String(row[3] || "").trim(),
+        borrowerEmail: String(row[4] || "").trim(),
+        loanDate: row[5]
           ? Utilities.formatDate(
-              new Date(row[7]),
+              new Date(row[5]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
           : "",
-        returnDate: row[8]
+        returnDate: row[6]
           ? Utilities.formatDate(
-              new Date(row[8]),
+              new Date(row[6]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
           : "",
-        type: String(row[9] || "").trim(),
-        adminNotes: String(row[10] || "").trim(),
+        type: String(row[7] || "").trim(),
+        adminNotes: String(row[8] || "").trim(),
       };
     })
     .filter(function (t) {
@@ -307,67 +288,62 @@ function getAllTransactions() {
 
 /**
  * Appends a new asset row to the Assets sheet.
- * assetData: { assetTag, serialNumber, deviceName, model, category, condition, notes }
+ * assetData: { serialNumber, model, condition, notes }
  */
 function addAsset(assetData) {
-  var tag = String(assetData.assetTag || "").trim();
-  if (!tag) throw new Error("AssetTag is required.");
+  var sn = String(assetData.serialNumber || "").trim();
+  if (!sn) throw new Error("Serial Number is required.");
 
   // Check for duplicate
-  var existing = getAssetByTag(tag);
-  if (existing) throw new Error('Asset tag "' + tag + '" already exists.');
+  var existing = getAssetBySerial(sn);
+  if (existing)
+    throw new Error('Serial number "' + sn + '" already exists.');
 
   var now = new Date();
   var sheet = getAssetsSheet_();
   sheet.appendRow([
-    tag,
-    String(assetData.serialNumber || "").trim(),
-    String(assetData.deviceName || "").trim(),
+    sn,
     String(assetData.model || "").trim(),
-    String(assetData.category || "").trim(),
     String(assetData.condition || "Good").trim(),
     "Available",
     String(assetData.notes || "").trim(),
     now,
     now,
   ]);
-  return { success: true, assetTag: tag };
+  return { success: true, serialNumber: sn };
 }
 
 /**
  * Updates specified fields for an existing asset.
- * Called from frontend as updateAsset({ assetTag, updatedFields }).
- * params: { assetTag, updatedFields: { serialNumber?, deviceName?, model?, category?, condition?, status?, notes? } }
+ * Called from frontend as updateAsset({ serialNumber, updatedFields }).
+ * params: { serialNumber, updatedFields: { model?, condition?, status?, notes? } }
  */
 function updateAsset(params) {
-  var assetTag = params.assetTag;
+  var serialNumber = params.serialNumber;
   var updatedFields = params.updatedFields;
-  var tag = String(assetTag || "")
+  var sn = String(serialNumber || "")
     .trim()
     .toUpperCase();
   var sheet = getAssetsSheet_();
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) throw new Error("No assets found.");
 
-  var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  var data = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
   for (var i = 0; i < data.length; i++) {
     if (
       String(data[i][0] || "")
         .trim()
-        .toUpperCase() === tag
+        .toUpperCase() === sn
     ) {
       var rowNum = i + 2;
       var row = data[i];
 
       // Map field names to column indices (0-based)
       var fieldMap = {
-        serialNumber: 1,
-        deviceName: 2,
-        model: 3,
-        category: 4,
-        condition: 5,
-        status: 6,
-        notes: 7,
+        model: 1,
+        condition: 2,
+        status: 3,
+        notes: 4,
       };
 
       Object.keys(fieldMap).forEach(function (field) {
@@ -375,13 +351,13 @@ function updateAsset(params) {
           row[fieldMap[field]] = updatedFields[field];
         }
       });
-      row[9] = new Date(); // LastModified
+      row[6] = new Date(); // LastModified
 
-      sheet.getRange(rowNum, 1, 1, 10).setValues([row]);
+      sheet.getRange(rowNum, 1, 1, 7).setValues([row]);
       return { success: true };
     }
   }
-  throw new Error('Asset tag "' + assetTag + '" not found.');
+  throw new Error('Serial number "' + serialNumber + '" not found.');
 }
 
 /**
@@ -398,20 +374,17 @@ function importAssetsFromCSV(csvString) {
     return h.trim().toLowerCase().replace(/"/g, "");
   });
   var colIndex = {
-    assetTag: headers.indexOf("assettag"),
     serialNumber: headers.indexOf("serialnumber"),
-    deviceName: headers.indexOf("devicename"),
     model: headers.indexOf("model"),
-    category: headers.indexOf("category"),
     condition: headers.indexOf("condition"),
     notes: headers.indexOf("notes"),
   };
 
-  if (colIndex.assetTag === -1)
+  if (colIndex.serialNumber === -1)
     return {
       imported: 0,
       skipped: 0,
-      errors: ['CSV missing required "AssetTag" column.'],
+      errors: ['CSV missing required "SerialNumber" column.'],
     };
 
   var imported = 0;
@@ -425,17 +398,17 @@ function importAssetsFromCSV(csvString) {
     // Simple CSV parse (handles quoted fields)
     var cols = parseCSVLine_(line);
 
-    var tag =
-      colIndex.assetTag >= 0
-        ? String(cols[colIndex.assetTag] || "").trim()
+    var sn =
+      colIndex.serialNumber >= 0
+        ? String(cols[colIndex.serialNumber] || "").trim()
         : "";
-    if (!tag) {
-      errors.push("Row " + (i + 1) + ": AssetTag is blank, skipped.");
+    if (!sn) {
+      errors.push("Row " + (i + 1) + ": SerialNumber is blank, skipped.");
       continue;
     }
 
     // Check duplicate
-    var existing = getAssetByTag(tag);
+    var existing = getAssetBySerial(sn);
     if (existing) {
       skipped++;
       continue;
@@ -443,20 +416,15 @@ function importAssetsFromCSV(csvString) {
 
     try {
       addAsset({
-        assetTag: tag,
-        serialNumber:
-          colIndex.serialNumber >= 0 ? cols[colIndex.serialNumber] || "" : "",
-        deviceName:
-          colIndex.deviceName >= 0 ? cols[colIndex.deviceName] || "" : "",
+        serialNumber: sn,
         model: colIndex.model >= 0 ? cols[colIndex.model] || "" : "",
-        category: colIndex.category >= 0 ? cols[colIndex.category] || "" : "",
         condition:
           colIndex.condition >= 0 ? cols[colIndex.condition] || "Good" : "Good",
         notes: colIndex.notes >= 0 ? cols[colIndex.notes] || "" : "",
       });
       imported++;
     } catch (e) {
-      errors.push("Row " + (i + 1) + " (" + tag + "): " + e.message);
+      errors.push("Row " + (i + 1) + " (" + sn + "): " + e.message);
     }
   }
 
@@ -496,25 +464,25 @@ function parseCSVLine_(line) {
 
 /**
  * Submits a loan transaction.
- * loanData: { borrowerName, borrowerEmail, assetTag }
+ * loanData: { borrowerName, borrowerEmail, serialNumber, condition }
  */
 function submitLoan(loanData) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(15000); // wait up to 15 seconds
 
-    var tag = String(loanData.assetTag || "").trim();
-    if (!tag) throw new Error("Asset tag is required.");
+    var sn = String(loanData.serialNumber || "").trim();
+    if (!sn) throw new Error("Serial number is required.");
     if (!loanData.borrowerName) throw new Error("Borrower name is required.");
     if (!loanData.borrowerEmail) throw new Error("Borrower email is required.");
 
     // Verify asset is Available
-    var asset = getAssetByTag(tag);
-    if (!asset) throw new Error('Asset "' + tag + '" not found.');
+    var asset = getAssetBySerial(sn);
+    if (!asset) throw new Error('Asset "' + sn + '" not found.');
     if (asset.status !== "Available")
       throw new Error(
         'Asset "' +
-          tag +
+          sn +
           '" is not available (current status: ' +
           asset.status +
           ").",
@@ -523,14 +491,15 @@ function submitLoan(loanData) {
     var now = new Date();
     var txnId = generateTxnId_();
 
+    // Use condition from loan form (admin may have changed it)
+    var loanCondition = String(loanData.condition || asset.condition).trim();
+
     // Append transaction
     var txnSheet = getTransactionsSheet_();
     txnSheet.appendRow([
       txnId,
-      asset.assetTag,
-      asset.deviceName,
-      asset.category,
-      asset.condition,
+      asset.serialNumber,
+      loanCondition,
       loanData.borrowerName,
       loanData.borrowerEmail,
       now,
@@ -539,18 +508,19 @@ function submitLoan(loanData) {
       "", // AdminNotes
     ]);
 
-    // Update asset status
-    updateAsset({ assetTag: tag, updatedFields: { status: "On Loan" } });
+    // Update asset status (and condition if changed)
+    var updates = { status: "On Loan" };
+    if (loanCondition !== asset.condition) {
+      updates.condition = loanCondition;
+    }
+    updateAsset({ serialNumber: sn, updatedFields: updates });
 
     // Send email receipt
     sendLoanReceipt_({
       transactionId: txnId,
-      assetTag: asset.assetTag,
       serialNumber: asset.serialNumber,
-      deviceName: asset.deviceName,
       model: asset.model,
-      category: asset.category,
-      condition: asset.condition,
+      condition: loanCondition,
       borrowerName: loanData.borrowerName,
       borrowerEmail: loanData.borrowerEmail,
       loanDate: Utilities.formatDate(
@@ -583,24 +553,22 @@ function lookupLoansByBorrower(query) {
   var results = [];
 
   rows.forEach(function (row, idx) {
-    var type = String(row[9] || "").trim();
-    var returnDate = String(row[8] || "").trim();
+    var type = String(row[7] || "").trim();
+    var returnDate = String(row[6] || "").trim();
     if (type !== "Loan" || returnDate !== "") return; // only open loans
 
-    var name = String(row[5] || "").toLowerCase();
-    var email = String(row[6] || "").toLowerCase();
+    var name = String(row[3] || "").toLowerCase();
+    var email = String(row[4] || "").toLowerCase();
     if (name.indexOf(q) !== -1 || email.indexOf(q) !== -1) {
       results.push({
         transactionId: String(row[0] || "").trim(),
-        assetTag: String(row[1] || "").trim(),
-        deviceName: String(row[2] || "").trim(),
-        category: String(row[3] || "").trim(),
-        condition: String(row[4] || "").trim(),
-        borrowerName: String(row[5] || "").trim(),
-        borrowerEmail: String(row[6] || "").trim(),
-        loanDate: row[7]
+        serialNumber: String(row[1] || "").trim(),
+        condition: String(row[2] || "").trim(),
+        borrowerName: String(row[3] || "").trim(),
+        borrowerEmail: String(row[4] || "").trim(),
+        loanDate: row[5]
           ? Utilities.formatDate(
-              new Date(row[7]),
+              new Date(row[5]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
@@ -613,37 +581,35 @@ function lookupLoansByBorrower(query) {
 }
 
 /**
- * Finds the open loan for a specific asset tag.
+ * Finds the open loan for a specific serial number.
  * Returns a single loan object or null.
  */
-function lookupLoanByAssetTag(assetTag) {
-  var tag = String(assetTag || "")
+function lookupLoanBySerial(serialNumber) {
+  var sn = String(serialNumber || "")
     .trim()
     .toUpperCase();
-  if (!tag) return null;
+  if (!sn) return null;
 
   var sheet = getTransactionsSheet_();
   var rows = getSheetData_(sheet);
 
   for (var i = 0; i < rows.length; i++) {
     var row = rows[i];
-    var type = String(row[9] || "").trim();
-    var returnDate = String(row[8] || "").trim();
-    var rowTag = String(row[1] || "")
+    var type = String(row[7] || "").trim();
+    var returnDate = String(row[6] || "").trim();
+    var rowSn = String(row[1] || "")
       .trim()
       .toUpperCase();
-    if (type === "Loan" && returnDate === "" && rowTag === tag) {
+    if (type === "Loan" && returnDate === "" && rowSn === sn) {
       return {
         transactionId: String(row[0] || "").trim(),
-        assetTag: String(row[1] || "").trim(),
-        deviceName: String(row[2] || "").trim(),
-        category: String(row[3] || "").trim(),
-        condition: String(row[4] || "").trim(),
-        borrowerName: String(row[5] || "").trim(),
-        borrowerEmail: String(row[6] || "").trim(),
-        loanDate: row[7]
+        serialNumber: String(row[1] || "").trim(),
+        condition: String(row[2] || "").trim(),
+        borrowerName: String(row[3] || "").trim(),
+        borrowerEmail: String(row[4] || "").trim(),
+        loanDate: row[5]
           ? Utilities.formatDate(
-              new Date(row[7]),
+              new Date(row[5]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
@@ -657,7 +623,7 @@ function lookupLoanByAssetTag(assetTag) {
 
 /**
  * Processes a device return.
- * returnData: { transactionId, assetTag, borrowerEmail, borrowerName, adminNotes? }
+ * returnData: { transactionId, serialNumber, borrowerEmail, borrowerName, adminNotes? }
  */
 function submitReturn(returnData) {
   var lock = LockService.getScriptLock();
@@ -665,15 +631,15 @@ function submitReturn(returnData) {
     lock.waitLock(15000);
 
     var txnId = String(returnData.transactionId || "").trim();
-    var tag = String(returnData.assetTag || "").trim();
+    var sn = String(returnData.serialNumber || "").trim();
     if (!txnId) throw new Error("Transaction ID is required.");
-    if (!tag) throw new Error("Asset tag is required.");
+    if (!sn) throw new Error("Serial number is required.");
 
     var sheet = getTransactionsSheet_();
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) throw new Error("No transactions found.");
 
-    var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
+    var data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
     var targetRow = -1;
     var loanDate = "";
     var txnData = null;
@@ -682,13 +648,13 @@ function submitReturn(returnData) {
       var row = data[i];
       if (
         String(row[0] || "").trim() === txnId &&
-        String(row[9] || "").trim() === "Loan" &&
-        String(row[8] || "").trim() === ""
+        String(row[7] || "").trim() === "Loan" &&
+        String(row[6] || "").trim() === ""
       ) {
         targetRow = i + 2;
-        loanDate = row[7]
+        loanDate = row[5]
           ? Utilities.formatDate(
-              new Date(row[7]),
+              new Date(row[5]),
               Session.getScriptTimeZone(),
               "yyyy-MM-dd HH:mm:ss",
             )
@@ -709,9 +675,9 @@ function submitReturn(returnData) {
     );
 
     // Write ReturnDate and AdminNotes to existing Loan row
-    sheet.getRange(targetRow, 9).setValue(now); // col I = ReturnDate
+    sheet.getRange(targetRow, 7).setValue(now); // col G = ReturnDate
     if (returnData.adminNotes) {
-      sheet.getRange(targetRow, 11).setValue(returnData.adminNotes); // col K
+      sheet.getRange(targetRow, 9).setValue(returnData.adminNotes); // col I
     }
 
     // Append a Return transaction row for full history
@@ -722,31 +688,26 @@ function submitReturn(returnData) {
       String(txnData[2] || ""),
       String(txnData[3] || ""),
       String(txnData[4] || ""),
-      String(txnData[5] || ""),
-      String(txnData[6] || ""),
-      txnData[7], // original LoanDate
+      txnData[5], // original LoanDate
       now, // ReturnDate
       "Return",
       returnData.adminNotes || "",
     ]);
 
     // Update asset status back to Available
-    updateAsset({ assetTag: tag, updatedFields: { status: "Available" } });
+    updateAsset({ serialNumber: sn, updatedFields: { status: "Available" } });
 
     // Get full asset details for email
-    var asset = getAssetByTag(tag);
+    var asset = getAssetBySerial(sn);
 
     // Send email receipt
     sendReturnReceipt_({
       transactionId: txnId,
-      assetTag: tag,
-      serialNumber: asset ? asset.serialNumber : "",
-      deviceName: asset ? asset.deviceName : String(txnData[2] || ""),
+      serialNumber: asset ? asset.serialNumber : sn,
       model: asset ? asset.model : "",
-      category: asset ? asset.category : String(txnData[3] || ""),
-      condition: asset ? asset.condition : String(txnData[4] || ""),
-      borrowerName: returnData.borrowerName || String(txnData[5] || ""),
-      borrowerEmail: returnData.borrowerEmail || String(txnData[6] || ""),
+      condition: asset ? asset.condition : String(txnData[2] || ""),
+      borrowerName: returnData.borrowerName || String(txnData[3] || ""),
+      borrowerEmail: returnData.borrowerEmail || String(txnData[4] || ""),
       loanDate: loanDate,
       returnDate: nowStr,
     });
