@@ -6,6 +6,36 @@
 var SPREADSHEET_ID = "14O9Sx0k3xTvmJsGL8tV6xelhK8DETKe7Xym00Ga3AVM";
 
 // ============================================================
+// One-Time Setup — Run this from the Apps Script editor, then
+// copy the logged Spreadsheet ID into SPREADSHEET_ID above.
+// ============================================================
+
+function createNewSheet() {
+  var ss = SpreadsheetApp.create("Asset Management PLD");
+
+  // Assets sheet (rename default Sheet1)
+  var assetsSheet = ss.getSheets()[0];
+  assetsSheet.setName("Assets");
+  assetsSheet.getRange(1, 1, 1, 7).setValues([[
+    "SerialNumber", "Model", "Condition", "Status", "Notes", "DateAdded", "LastModified"
+  ]]);
+  assetsSheet.getRange(1, 1, 1, 7).setFontWeight("bold");
+  assetsSheet.setFrozenRows(1);
+
+  // Transactions sheet
+  var txnSheet = ss.insertSheet("Transactions");
+  txnSheet.getRange(1, 1, 1, 9).setValues([[
+    "TransactionID", "SerialNumber", "Condition", "BorrowerName", "BorrowerEmail",
+    "LoanDate", "ReturnDate", "Type", "AdminNotes"
+  ]]);
+  txnSheet.getRange(1, 1, 1, 9).setFontWeight("bold");
+  txnSheet.setFrozenRows(1);
+
+  Logger.log("Spreadsheet created! ID: " + ss.getId());
+  Logger.log("URL: " + ss.getUrl());
+}
+
+// ============================================================
 // Entry Point
 // ============================================================
 
