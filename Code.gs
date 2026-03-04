@@ -3,7 +3,14 @@
 // ============================================================
 
 // TODO: Replace with your Google Spreadsheet ID after creating the sheet
-var SPREADSHEET_ID = "14O9Sx0k3xTvmJsGL8tV6xelhK8DETKe7Xym00Ga3AVM";
+var SPREADSHEET_ID = "1otAK_9mFx4yyM2bd08t0Qw-WGUdXfdeFFlqmRkwVoAo";
+
+// TODO: Replace with the Head of Department email address for CC on loan/return receipts
+var HOD_EMAIL = "wdl3041staff@gmail.com";
+
+function getSpreadsheetUrl() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID).getUrl();
+}
 
 // ============================================================
 // One-Time Setup — Run this from the Apps Script editor, then
@@ -16,18 +23,39 @@ function createNewSheet() {
   // Assets sheet (rename default Sheet1)
   var assetsSheet = ss.getSheets()[0];
   assetsSheet.setName("Assets");
-  assetsSheet.getRange(1, 1, 1, 7).setValues([[
-    "SerialNumber", "Model", "Condition", "Status", "Notes", "DateAdded", "LastModified"
-  ]]);
+  assetsSheet
+    .getRange(1, 1, 1, 7)
+    .setValues([
+      [
+        "SerialNumber",
+        "Model",
+        "Condition",
+        "Status",
+        "Notes",
+        "DateAdded",
+        "LastModified",
+      ],
+    ]);
   assetsSheet.getRange(1, 1, 1, 7).setFontWeight("bold");
   assetsSheet.setFrozenRows(1);
 
   // Transactions sheet
   var txnSheet = ss.insertSheet("Transactions");
-  txnSheet.getRange(1, 1, 1, 9).setValues([[
-    "TransactionID", "SerialNumber", "Condition", "BorrowerName", "BorrowerEmail",
-    "LoanDate", "ReturnDate", "Type", "AdminNotes"
-  ]]);
+  txnSheet
+    .getRange(1, 1, 1, 9)
+    .setValues([
+      [
+        "TransactionID",
+        "SerialNumber",
+        "Condition",
+        "BorrowerName",
+        "BorrowerEmail",
+        "LoanDate",
+        "ReturnDate",
+        "Type",
+        "AdminNotes",
+      ],
+    ]);
   txnSheet.getRange(1, 1, 1, 9).setFontWeight("bold");
   txnSheet.setFrozenRows(1);
 
@@ -65,6 +93,54 @@ function getTransactionsSheet_() {
       "Transactions sheet not found. Please create it with headers.",
     );
   return sheet;
+}
+
+function ensureArchivedSheet_() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName("Archived");
+  if (sheet) return sheet;
+  sheet = ss.insertSheet("Archived");
+  sheet
+    .getRange(1, 1, 1, 9)
+    .setValues([
+      [
+        "TransactionID",
+        "SerialNumber",
+        "Condition",
+        "BorrowerName",
+        "BorrowerEmail",
+        "LoanDate",
+        "ReturnDate",
+        "Type",
+        "AdminNotes",
+      ],
+    ]);
+  sheet.getRange(1, 1, 1, 9).setFontWeight("bold");
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+/**
+ * Archives a transaction by moving it from Transactions to the Archived sheet.
+ */
+function archiveTransaction(transactionId) {
+  var txnId = String(transactionId || "").trim();
+  if (!txnId) throw new Error("Transaction ID is required.");
+
+  var sheet = getTransactionsSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) throw new Error("No transactions found.");
+
+  var data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+  for (var i = 0; i < data.length; i++) {
+    if (String(data[i][0] || "").trim() === txnId) {
+      var archivedSheet = ensureArchivedSheet_();
+      archivedSheet.appendRow(data[i]);
+      sheet.deleteRow(i + 2);
+      return { success: true };
+    }
+  }
+  throw new Error('Transaction "' + txnId + '" not found.');
 }
 
 /**
@@ -120,11 +196,13 @@ function sendLoanReceipt_(data) {
     "This is an automated receipt.",
   ].join("\n");
 
-  MailApp.sendEmail({
+  var emailOpts = {
     to: data.borrowerEmail,
     subject: subject,
     body: body,
-  });
+  };
+  if (HOD_EMAIL) emailOpts.cc = HOD_EMAIL;
+  MailApp.sendEmail(emailOpts);
 }
 
 function sendReturnReceipt_(data) {
@@ -160,11 +238,13 @@ function sendReturnReceipt_(data) {
     "This is an automated receipt.",
   ].join("\n");
 
-  MailApp.sendEmail({
+  var emailOpts = {
     to: data.borrowerEmail,
     subject: subject,
     body: body,
-  });
+  };
+  if (HOD_EMAIL) emailOpts.cc = HOD_EMAIL;
+  MailApp.sendEmail(emailOpts);
 }
 
 // ============================================================
@@ -326,8 +406,7 @@ function addAsset(assetData) {
 
   // Check for duplicate
   var existing = getAssetBySerial(sn);
-  if (existing)
-    throw new Error('Serial number "' + sn + '" already exists.');
+  if (existing) throw new Error('Serial number "' + sn + '" already exists.');
 
   var now = new Date();
   var sheet = getAssetsSheet_();
