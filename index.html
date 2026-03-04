@@ -241,7 +241,7 @@
         </div>
         <div class="field">
           <label for="vEmail">Email Address</label>
-          <input type="email" id="vEmail" placeholder="e.g. jane@school.edu" autocomplete="email" onkeydown="if(event.key==='Enter') confirmIdentity()" />
+          <input type="email" id="vEmail" placeholder="e.g. jane@students.edu.sg" autocomplete="email" onkeydown="if(event.key==='Enter') confirmIdentity()" />
         </div>
         <button class="btn btn-primary" onclick="confirmIdentity()">Confirm Identity</button>
       </div>
@@ -334,12 +334,12 @@
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <div class="form-group" style="flex:1; min-width:200px;">
           <label for="returnQuery">Search by Borrower Name or Email</label>
-          <input type="text" id="returnQuery" placeholder="e.g. Jane Smith or jane@school.edu"
+          <input type="text" id="returnQuery" placeholder="e.g. Jane Smith or jane@students.edu.sg"
             oninput="onReturnSearchInput()" onkeydown="if(event.key==='Enter') searchReturn()" />
         </div>
         <div class="form-group" style="flex:1; min-width:160px;">
-          <label for="returnAssetTag">Search by Asset Tag</label>
-          <input type="text" id="returnAssetTag" placeholder="e.g. PLT-001"
+          <label for="returnAssetTag">Search by Serial Number</label>
+          <input type="text" id="returnAssetTag"
             oninput="onReturnTagInput()" onkeydown="if(event.key==='Enter') searchReturn()" />
         </div>
         <div style="display:flex; align-items:flex-end; gap:8px;">
@@ -358,7 +358,7 @@
         <table id="returnTable">
           <thead>
             <tr>
-              <th>Asset Tag</th>
+              <th>Serial Number</th>
               <th>Device</th>
               <th>Borrower</th>
               <th>Email</th>
@@ -390,7 +390,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Asset Tag</th>
+              <th>Serial Number</th>
               <th>Device</th>
               <th>Borrower</th>
               <th>Loan Date</th>
